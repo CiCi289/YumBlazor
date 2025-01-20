@@ -1,0 +1,103 @@
+﻿@page "/category"
+@inject ICategoryRepository _categoryRepository
+@inject IJSRuntime _JS
+
+<h3>CategoryList</h3>
+
+
+@if (isProcessing == true)
+{
+    <div class="position-absolute w-75 h-75 d-flex flex-column align-items-center bg-white justify-content-center ">
+        <img src="./images/loading.gif" alt="loading" />
+    </div>
+}
+else
+{
+    <div class="card shadow border-0 m-4">
+        <div class="card-header bg-black bg-gradient m-lg-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">
+                        Category List
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="card-body py-4">
+            <div class="row pb-3">
+                <div class="col-12 text-end mb-4">
+                    <a href="category/create" class="btn btn-lg btn-secondary" style="width:250px;">
+                        <i class="bi bi-plus-square"></i> Add New Category
+                    </a>
+                </div>
+                @if (Categories.Any())
+                {
+                    <div>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var category in Categories)
+                                {
+                                    <tr>
+                                        <td>
+                                            @category.Name
+                                        </td>
+                                        <td>
+                                            <a href="@($"category/update/{category.Id}")" class="btn btn-primary">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </a>
+                                            <button class="btn btn-danger" @onclick="()=>HandleDelete(category.Id)">
+                                                <i class="bi bi-trash3"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool isProcessing { get; set; } = true;
+    public IEnumerable<Category> Categories { get; set; } = new List<Category>();
+    public int DeleteCategoryID { get; set; } = 0;
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadCategories();
+            isProcessing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+
+    }
+
+    public async Task LoadCategories()
+    {
+        Categories = await _categoryRepository.GetAllAsync();
+    }
+
+    private void HandleDelete(int id)
+    {
+        DeleteCategoryID = id;
+        _JS.InvokeVoidAsync("ShowConfirmationModal");
+    }
+
+
+
+}
